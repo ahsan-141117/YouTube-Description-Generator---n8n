@@ -1,0 +1,590 @@
+{
+  "name": "YouTube Description Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "feedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UC81ag-lWVzu1Dq19LGd_Sfg"
+      },
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        96
+      ],
+      "id": "fb31cd92-9502-4c60-9b33-b19d1bf35614",
+      "name": "RSS Feed Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=System Prompt\nYou are an expert YouTube content writer.\nYour job is to write engaging, keyword-rich, and informative YouTube video description in English language based only on the provided video title and link.\nDo not include any introductory remarks, closing statements, questions, or instructions—output only the description itself, as it would appear on YouTube.\n\nUser Prompt\nWrite a compelling YouTube video description for the following video.\n\nTitle: {{ $node[\"RSS Feed Trigger\"].json[\"title\"] }}\n\nLink: {{ $node[\"RSS Feed Trigger\"].json[\"link\"] }}\n\n\nFocus on attracting viewers, describing the content, and including relevant keywords for search. Have a separate paragraph for Keywords and a separate paragraph for Hashtags. Use atleast 5 colorful icons in the content for better illustration but do not use them all at once side by side.\n\nOnly output the YouTube description—no extra comments or context.",
+        "needsFallback": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        320,
+        -176
+      ],
+      "id": "368eeacb-31c8-4237-aff9-5bf161e81791",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "qwen/qwen-2.5-72b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        352,
+        64
+      ],
+      "id": "c927d114-d0fe-4dcb-bde6-61cd36539d1a",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "oEcMc66ONATJEJP6",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "google/gemma-3-12b-it:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        480,
+        64
+      ],
+      "id": "331add64-9c60-499a-a07e-a541aea328bc",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "oEcMc66ONATJEJP6",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "update",
+        "videoId": "={{ $node[\"RSS Feed Trigger\"].json[\"id\"].split(\":\").pop() }}",
+        "title": "={{ $node[\"RSS Feed Trigger\"].json[\"title\"] }}",
+        "regionCode": "PK",
+        "categoryId": "20",
+        "updateFields": {
+          "description": "={{ $('Basic LLM Chain').item.json.text }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -64
+      ],
+      "id": "21ddb88c-5b43-40b4-94ae-1ddcbbdf502c",
+      "name": "Update a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "MejhIenjh9rdTZmc",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1l8oliXniLn5YRboIieEuuM0fO3MnpQJdh9I3HSdQUEg",
+          "mode": "list",
+          "cachedResultName": "n8n YouTube Description Generator",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1l8oliXniLn5YRboIieEuuM0fO3MnpQJdh9I3HSdQUEg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1884553423,
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1l8oliXniLn5YRboIieEuuM0fO3MnpQJdh9I3HSdQUEg/edit#gid=1884553423"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Video Link": "={{ $('RSS Feed Trigger').item.json.link }}",
+            "Video Title": "={{ $('RSS Feed Trigger').item.json.title }}",
+            "Generated Description": "={{ $('Basic LLM Chain').item.json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Video Link",
+              "displayName": "Video Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Title",
+              "displayName": "Video Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Generated Description",
+              "displayName": "Generated Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2064,
+        -256
+      ],
+      "id": "a97403e1-285d-4677-b00e-f3dfd998aa68",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VXd86Pw6Q60ATQWw",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "Video and Link for the new video could not be fetched"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        416,
+        240
+      ],
+      "id": "ef6d47e0-72ad-4fc4-a786-bae3bcb5f503",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3a43ad6a-fc1c-48da-bc48-66f2e9fc3564",
+              "leftValue": "title",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f44b99a1-d383-43a4-a97e-4f69f02d5887",
+              "leftValue": "link",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        96
+      ],
+      "id": "54dfdc15-4f55-420c-b15c-ca49b5747866",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a79feecc-475d-443a-962d-4e1892b3e47f",
+              "leftValue": "={{$json[\"snippet\"][\"description\"]}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        -64
+      ],
+      "id": "56f4fee1-b15c-4918-8ae9-18165b5ffa20",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Description could not be generated for the following video:\nTitle: {{ $node[\"RSS Feed Trigger\"].json[\"title\"] }}\nLink: {{ $node[\"RSS Feed Trigger\"].json[\"link\"] }}\n"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        32
+      ],
+      "id": "1582f251-35cf-4223-a917-14de2bf955ba",
+      "name": "Stop and Error1"
+    },
+    {
+      "parameters": {
+        "sendTo": "ahsanhummayoun2006@gmail.com",
+        "subject": "YouTube Video Description Generated For New Video",
+        "emailType": "text",
+        "message": "=Hey Producer,  \n\nA new YouTube video description has been generated for your latest video.\n\n\nTitle: {{ $node[\"RSS Feed Trigger\"].json[\"title\"] }}\n\nVideo Link: {{ $node[\"RSS Feed Trigger\"].json[\"link\"] }}\n\nGenerated Description: {{ $('Basic LLM Chain').item.json.text }}\n\nThank you.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1616,
+        -160
+      ],
+      "id": "2abbc92b-29f6-43ff-a6ba-f058bdb78a4f",
+      "name": "Send a message",
+      "webhookId": "2badb7a2-018e-4f7e-860b-f4d5e5de2c44",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GBzzLQQQKDGAyqvs",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "49bd58f6-2dce-47b7-88aa-d0666fd1e31c",
+              "leftValue": "={{$json[\"error\"] === undefined}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1840,
+        -160
+      ],
+      "id": "b49241ef-35d5-4484-92da-e9af528d420b",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Email could not be sent to the producer for the following video:\n\nTitle: {{ $node[\"RSS Feed Trigger\"].json[\"title\"] }}\nLink: {{ $node[\"RSS Feed Trigger\"].json[\"link\"] }}\n\nPlease configure the Gmail node properly.\n\n\n"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        -64
+      ],
+      "id": "ebfcec6d-f541-457a-adba-a91587624246",
+      "name": "Stop and Error2"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "ahsanhummayoun2006@gmail.com",
+        "subject": "Description Approval Required",
+        "message": "=Hey Manager,\n\nA description was generated for your newly uploaded video:\n\nTitle: {{ $('RSS Feed Trigger').item.json.title }}\n\nLink: {{ $('RSS Feed Trigger').item.json.link }}\n\nDescription:\n{{ $json.text }}\n\n\nPlease click on Approve to proceed with the current description or click on Decline to generate a new description.\n\nThank you.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        -144
+      ],
+      "id": "07148de8-0d15-4849-8509-a994a66917b1",
+      "name": "Send a message1",
+      "webhookId": "dc167685-5e40-4c8c-8337-fcf71bbadd7d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GBzzLQQQKDGAyqvs",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ee431370-9e42-4f79-aac4-2700495db3a4",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        -64
+      ],
+      "id": "33080769-bad2-4f31-8289-af804312ed52",
+      "name": "If3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "RSS Feed Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a video": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Update a video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "eXJJcRJH186AVZET"
+  },
+  "versionId": "7d29293a-d31c-4fff-8d48-22741f173fb5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7bc50f428589f30ba9e8dea22648d5b21371dbf29a247364f4c5cdaaced84196"
+  },
+  "id": "Jlt86E23RxqAZn4y",
+  "tags": []
+}
